@@ -1,4 +1,4 @@
-package com.arml.mercatus.ui.component.chart
+package com.arml.mercatus.ui.component.graph
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,22 +14,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.arml.mercatus.data.common.utils.collection.getMinMax
 import com.arml.mercatus.data.mock.mockPrices
-import com.arml.mercatus.ui.component.graph.ChartLegends
-import com.arml.mercatus.ui.component.graph.PriceChart
-import com.arml.mercatus.ui.component.graph.average
-import com.arml.mercatus.ui.component.graph.expectedValues
+import com.arml.mercatus.ui.component.chart.container.ChartWithLegends
+import com.arml.mercatus.ui.component.series.meanCurrency
+import com.arml.mercatus.ui.component.series.boundsByStdDev
 import com.arml.mercatus.ui.theme.dimens
 
 @Preview(showBackground = true)
 @Composable
-fun Chart2DPreview() {
-    ChartLegends(
+fun PriceChartPreview() {
+    PriceChart(
+        modifier = Modifier
+            .aspectRatio(3 / 2f)
+            .padding(MaterialTheme.dimens.mediumPadding),
+        data = mockPrices,
+        yAxisLabelsProvider = { data ->
+            val (min, max) = data.boundsByStdDev()
+            val mean = data.meanCurrency()
+            listOf(min, mean, max)
+        },
+        xAxisLabelsProvider = { data -> data.map { it.date } },
+        xBoundsProvider = { data -> data.getMinMax { it.date } },
+        yBoundsProvider = { data -> data.boundsByStdDev(0) },
+        textLegendStyle = MaterialTheme.typography.labelSmall,
+        axisPathEffect = PathEffect.dashPathEffect(
+            floatArrayOf(10f, 10f),
+            0f
+        ),
+        gridLineBrush = Brush.verticalGradient(
+            listOf(
+                Color.Black,
+                Color.LightGray
+            )
+        )
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChartWithLegendsPreview() {
+    ChartWithLegends(
         modifier = Modifier
             .aspectRatio(1f),
         title = {
@@ -104,22 +135,22 @@ fun Chart2DPreview() {
                     start = 12.dp
                 ),
             data = mockPrices,
-            yLabelData = { data ->
-                val (min, max) = data.expectedValues()
-                val mean = data.average()
+            yAxisLabelsProvider = { data ->
+                val (min, max) = data.boundsByStdDev()
+                val mean = data.meanCurrency()
                 listOf(min, mean, max)
             },
-            xLabelData = { data -> data.map { it.date }
+            xAxisLabelsProvider = { data ->
+                data.map { it.date }
             },
-            xBounds = { data ->
+            xBoundsProvider = { data ->
                 data.getMinMax { it.date }
             },
-            yBounds = { data ->
-                data.expectedValues(0)
+            yBoundsProvider = { data ->
+                data.boundsByStdDev(0)
             },
-            textStyle = MaterialTheme.typography.labelSmall,
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
+            textLegendStyle = MaterialTheme.typography.labelSmall,
+            axisPathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
         )
     }
 }
-
